@@ -1,0 +1,89 @@
+{% render 'bootstrap-lite' %}
+
+<section id="pqr-track" class="pqr-i">
+  <div class="in-pqr">
+    <div class="container">
+      <div class="card-i">
+        <div class="heading">
+          <h2 class="mb-3">Seguimiento PQR</h2>
+        </div>
+
+        <div class="boding">
+          <form id="pqrTrackForm" class="row g-3">
+            <div class="col-md-6 form-floating">
+              <input type="text" class="form-control" id="pqrFolio" name="folio"
+                     placeholder="PQR-YYYYMMDD-000123" required>
+              <label for="pqrFolio">Folio</label>
+            </div>
+
+            <div class="col-md-6 form-floating">
+              <input type="email" class="form-control" id="pqrTrackEmail" name="email"
+                     placeholder="correo@ejemplo.com" required>
+              <label for="pqrTrackEmail">Email</label>
+            </div>
+
+            <div class="col-12">
+              <button class="btn btn-i w-100" type="submit">Consultar</button>
+            </div>
+          </form>
+
+          <div id="pqrStatus" class="mt-4"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<script>
+  const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzWzeFqJIZ6qKQADA1i4JfKfpVVocHQKoDBwduYsovkvGLqXJp5ksAt_LgmXvpzPBFj/exec';
+  const TOKEN = 'AKfycbzWzeFqJIZ6qKQADA1i4JfKfpVVocHQKoDBwduYsovkvGLqXJp5ksAt_LgmXvpzPBFj';
+
+  function jsonp(url){
+    return new Promise((resolve, reject)=>{
+      const cb = '__pqr_cb_' + Math.random().toString(36).slice(2);
+      const s = document.createElement('script');
+      const cleanup = () => { delete window[cb]; s.remove(); };
+      window[cb] = (data)=>{ cleanup(); resolve(data); };
+      s.onerror = ()=>{ cleanup(); reject(new Error('JSONP error')); };
+      s.src = url + (url.includes('?')?'&':'?') + 'callback=' + cb;
+      document.body.appendChild(s);
+    });
+  }
+
+  document.getElementById('pqrTrackForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const p = Object.fromEntries(new FormData(e.target).entries());
+    const url = new URL(WEB_APP_URL);
+    url.searchParams.set('folio', p.folio.trim());
+    url.searchParams.set('email', p.email.trim());
+    url.searchParams.set('token', TOKEN);
+
+    const btn = e.submitter || e.target.querySelector('button[type="submit"]');
+    const txt = btn.textContent; btn.disabled=true; btn.textContent='Buscando…';
+    try {
+      const d = await jsonp(url.toString());
+      if (!d.ok) throw new Error(d.error || 'No encontrado');
+
+      const el = document.getElementById('pqrStatus');
+      const badge = (s)=> {
+        const map = { RADICADA:'secondary', EN_TRAMITE:'warning', FINALIZADA:'success' };
+        return `<span class="badge text-bg-${map[s]||'secondary'}">${s.replace('_',' ')}</span>`;
+      };
+      const tl = (d.timeline||[]).map(ev =>
+        `<li class="list-group-item">${new Date(ev.t).toLocaleString()} — <b>${ev.ev}</b> ${ev.note?('— '+ev.note):''}</li>`
+      ).join('');
+
+      el.innerHTML = `
+        <div class="card"><div class="card-body">
+          <h5 class="card-title">Folio: ${d.folio} ${badge(d.status||'RADICADA')}</h5>
+          <p class="card-subtitle text-muted mb-3">Radicada el ${new Date(d.created_at).toLocaleString()}</p>
+          <ul class="list-group">${tl || '<li class="list-group-item">Sin eventos adicionales.</li>'}</ul>
+        </div></div>`;
+    } catch(err){
+      alert('No se pudo consultar: ' + err.message);
+    } finally {
+      btn.disabled=false; btn.textContent=txt;
+    }
+  });
+</script>

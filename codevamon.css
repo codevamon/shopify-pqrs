@@ -1,0 +1,64 @@
+.actions-i {
+  display: flex;
+  grid-gap: 1vw;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  margin-top: 2rem;
+}
+
+.btn-i {
+  border: 1px solid !important;
+  color: #000;
+  background: transparent;
+  padding: 1rem 2rem !important;
+  border-radius: 99rem !important;
+  cursor: pointer !important;
+  transition: all .3s ease-in-out !important;
+  transform: scale(1);
+}
+.btn-i:hover {
+  background:#000;
+  color:#fff;
+  transform:scale(1.05);
+}
+.fullwidth{
+  width:100%;
+}
+.cart__consent{
+  margin-bottom:2rem !important;
+}
+.cart__consent label {
+  display: flex;
+  gap: .5rem;
+  align-items: flex-start;
+  font-size: 1.5rem;
+  letter-spacing: 0;
+  line-height: 1;
+  margin-bottom: 1rem;
+}
+
+
+/* PQR */
+
+section.pqr-i {
+  padding: 10rem 0;
+}
+section.pqr-i .card-i {
+  width: 500px;
+  max-width: 100%;
+  margin: 0 auto;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 3rem -1rem #b2c2da;
+  padding: 2rem;
+}
+.form-check-input[type=checkbox]{
+  width:1rem;
+}
+.form-floating>label{
+  left:0.5rem !important;
+}
+div#pqrReceiptModal {
+  background: #34363bcc;
+}

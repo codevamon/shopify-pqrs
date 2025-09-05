@@ -1,0 +1,151 @@
+{% render 'bootstrap-lite' %}
+
+
+<section id="pqr-submit" class="pqr-i">
+  <div class="in-pqr">
+    <div class="container">
+      <div class="card-i">
+        <div class="heading">
+          <h2 class="mb-3">Radicar PQR</h2>
+        </div>
+        <div class="boding">
+          <form id="pqrForm" class="row g-3" novalidate>
+            <div class="col-md-6 form-floating">
+              <input type="text" class="form-control" id="pqrNombre" name="nombre" placeholder="Nombre" required>
+              <label for="pqrNombre">Nombre*</label>
+            </div>
+
+            <div class="col-md-6 form-floating">
+              <input type="email" class="form-control" id="pqrEmail" name="email" placeholder="correo@ejemplo.com" required>
+              <label for="pqrEmail">Email*</label>
+            </div>
+
+            <div class="col-md-6 form-floating">
+              <input type="text" class="form-control" id="pqrTelefono" name="telefono" placeholder="Teléfono">
+              <label for="pqrTelefono">Teléfono</label>
+            </div>
+
+            <div class="col-md-6 form-floating">
+              <input type="text" class="form-control" id="pqrPedido" name="pedido" placeholder="#1234">
+              <label for="pqrPedido">Número de pedido (opcional)</label>
+            </div>
+
+            <div class="col-md-6 form-floating">
+              <select class="form-select" id="pqrCategoria" name="categoria" required>
+                <option value=""></option> <!-- necesario para floating label -->
+                <option value="peticion">Petición</option>
+                <option value="queja">Queja</option>
+                <option value="reclamo">Reclamo</option>
+                <option value="sugerencia">Sugerencia</option>
+              </select>
+              <label for="pqrCategoria">Categoría*</label>
+            </div>
+
+            <div class="col-12 form-floating">
+              <textarea class="form-control" id="pqrMensaje" name="mensaje" placeholder="Escribe tu mensaje" style="height: 120px" required></textarea>
+              <label for="pqrMensaje">Mensaje*</label>
+            </div>
+
+            <!-- Honeypot antispam -->
+            <input type="text" name="website" class="d-none" tabindex="-1" autocomplete="off">
+
+            <div class="col-12 form-check">
+              <input class="form-check-input" type="checkbox" id="consent" required>
+              <label class="form-check-label" for="consent">
+              Ha leído y se encuentra de acuerdo con los términos y condiciones de Torres Trillizas S.A.S disponibles en: <a href="https://glucloud.com/pages/terminos-y-condiciones" style="font-weight:600; text-decoration:underline;" target="_blank" rel="noopener">Términos & Condiciones</a> y autorizo que los datos que se entregarán en la Página de Pago serán tratados por Torres Trillizas S.A.S, en calidad de responsable, de acuerdo con las finalidades señaladas en la Política de Privacidad disponible <a href="https://glucloud.com/pages/tratamientos-de-datos" style="font-weight:600; text-decoration:underline;" target="_blank" rel="noopener">aquí</a> la cual declaro haber leído y conocido quedando informado de los derechos que me asisten como titular entre otras consideraciones relacionadas al tratamiento.
+               y autorizo que los datos que se entregarán en la Página de Pago serán tratados por la compañía.</label>
+            </div>
+
+            <div class="col-12">
+              <button class="btn btn-i w-100" type="submit">Radicar PQR</button>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Modal Bootstrap -->
+<div class="modal fade" id="pqrReceiptModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">¡PQR radicada!</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-1"><strong>Folio:</strong> <span id="pqrFolio"></span></p>
+        <p class="mb-1"><strong>Fecha y hora:</strong> <span id="pqrFecha"></span></p>
+        <p class="mb-0">Estado inicial: <span class="badge text-bg-secondary">RADICADA</span></p>
+        <hr>
+        <p class="small m-0">Guarda este número para consultar tu PQR en la página de seguimiento.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzWzeFqJIZ6qKQADA1i4JfKfpVVocHQKoDBwduYsovkvGLqXJp5ksAt_LgmXvpzPBFj/exec'; // <- tu URL
+  const TOKEN = 'AKfycbzWzeFqJIZ6qKQADA1i4JfKfpVVocHQKoDBwduYsovkvGLqXJp5ksAt_LgmXvpzPBFj';
+
+  const form = document.getElementById('pqrForm');
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+
+    // Honeypot
+    if ((form.website && form.website.value)) return;
+
+    const fd = new FormData(form);
+    fd.append('token', TOKEN);
+
+    const btn = form.querySelector('button[type="submit"]');
+    const txt = btn.textContent; btn.disabled = true; btn.textContent = 'Enviando…';
+
+    try {
+      const res = await fetch(WEB_APP_URL, { method: 'POST', body: fd });
+      const text = await res.text();
+      let data; try { data = JSON.parse(text); } catch(_) { throw new Error('Respuesta inválida'); }
+      if (!data.ok) throw new Error(data.error || 'Error al radicar');
+
+      // Rellenar y mostrar modal
+      document.getElementById('pqrFolio').textContent = data.folio;
+      document.getElementById('pqrFecha').textContent = new Date(data.created_at).toLocaleString();
+      const modal = new bootstrap.Modal(document.getElementById('pqrReceiptModal'));
+      modal.show();
+      form.reset();
+    } catch (err) {
+      alert('No se pudo radicar: ' + err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = txt;
+    }
+  });
+</script>
+
+<script>
+  (()=>{
+    const form = document.getElementById('pqrForm');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const consent = document.getElementById('consent');
+
+    // 1. Deshabilitar botón hasta que marquen el consentimiento
+    submitBtn.disabled = true;
+    consent.addEventListener('change', ()=>{
+      submitBtn.disabled = !consent.checked;
+    });
+
+    // 2. Validación nativa de campos requeridos antes de enviar
+    form.addEventListener('submit', (e)=>{
+      if(!form.checkValidity()){ 
+        e.preventDefault();
+        e.stopPropagation();
+        form.classList.add('was-validated'); // usa estilos bootstrap si están activos
+        return false;
+      }
+    }, true);
+  })();
+</script>
